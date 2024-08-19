@@ -1,0 +1,15 @@
+[package]
+name = "RoPaSc"
+version = "1.0.0"
+authors = []
+
+[addresses]
+gameAdd = "0xb03a47ad5f8758a5a0737fe3c6f72300b0e3951af6f061d06494437f0f971996"
+[dev-addresses]
+
+[dependencies.AptosFramework]
+git = "https://github.com/aptos-labs/aptos-core.git"
+rev = "mainnet"
+subdir = "aptos-move/framework/aptos-framework"
+
+[dev-dependencies]
