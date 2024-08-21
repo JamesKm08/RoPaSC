@@ -1,9 +1,15 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Aptos, AptosConfig, Network } from "@aptos-labs/ts-sdk";
+import { AccountAddress, Aptos, AptosConfig, Network } from "@aptos-labs/ts-sdk";
 import { InputTransactionData, useWallet} from "@aptos-labs/wallet-adapter-react";
 import { WalletSelector } from "@aptos-labs/wallet-adapter-ant-design";
 import "@aptos-labs/wallet-adapter-ant-design/dist/index.css";
 import styled from "styled-components";
+
+
+const MODULE_ADDRESS = "gameAdd";
+const MODULE_NAME = "RockPaperScissors";
+const aptosConfig = new AptosConfig({ network: Network.TESTNET });
+const client = new Aptos(aptosConfig);
 
 const WindowWrapper = styled.div`
   display: flex;
@@ -168,9 +174,6 @@ const ComputerOperationButton = styled(ComputerButton)`
   color: ${({ disabled }) => (disabled ? "#888888" : "white")};
 `;
 
-const MODULE_ADDRESS = "gameAdd";
-const MODULE_NAME = "RockPaperScissors";
-
 const App: React.FC = () => {
 
   const { account, connected, signAndSubmitTransaction } = useWallet();
@@ -178,6 +181,7 @@ const App: React.FC = () => {
   const [result, setResult] = useState<string>("");
   const [computerSelection, setComputerSelection] = useState<string>("");
   const [isActive, setIsActive] = useState<boolean>(false);
+  const [transactionInProgress, setTransactionInProgress] = useState<boolean>(false);
 
   const toggleActiveState = async () => {
     // Implement the function here
@@ -199,7 +203,41 @@ const App: React.FC = () => {
     setComputerSelection("");
   };
 
-  const handleOperationClick = async (operation: string) => {};
+  const handleOperationClick = async (operation: string) => {
+      setResult("");
+          setComputerSelection("");
+          if (
+            operation === "Rock" ||
+            operation === "Paper" ||
+            operation === "Scissors"
+          ) {
+            setInput(` ${operation} `);
+            try {
+              if (!account) return;
+              setTransactionInProgress(true);
+              const payload: InputTransactionData = {
+                data: {
+                  function: `${MODULE_ADDRESS}::${MODULE_NAME}::game`,
+                  functionArguments: [operation],
+                },
+              };
+              const response = await signAndSubmitTransaction(payload);
+              const resultData = await client.getAccountResource({
+                accountAddress: account?.address,
+                resourceType: `${MODULE_ADDRESS}::${MODULE_NAME}::GameResult`,
+              });
+              console.log(resultData);
+              setResult(resultData.game_result.toString());
+              setComputerSelection(resultData.computer_selection.toString());
+            } catch (error) {
+              console.error(error);
+            } finally {
+              setTransactionInProgress(false);
+            }
+          } else {
+            setInput(` ${operation} `);
+          }
+      };
 
   const connectedView = () => {
     return (
