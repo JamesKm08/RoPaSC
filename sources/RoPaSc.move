@@ -67,4 +67,14 @@ module gameAdd::RockPaperScissors {
             result.game_result = utf8(b"Lose"); // Computer wins
         }
     }
+
+    // Get the result of the game
+    public fun get_result(account: &signer): (String, String) acquires GameResult {
+        // Signer of account
+        let acc_signer = signer::address_of(account);
+        // Borrow resource
+        let result = borrow_global<GameResult>(acc_signer);
+        (result.computer_choice, result.game_result)
+    }
+
 }
